@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
+import { CategoriesService } from '../categories/categories.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 
@@ -24,6 +25,9 @@ describe('AuthService', () => {
   let jwtService: {
     signAsync: jest.Mock;
     verifyAsync: jest.Mock;
+  };
+  let categoriesService: {
+    createDefaultCategories: jest.Mock;
   };
   let _configService: {
     get: jest.Mock;
@@ -55,6 +59,10 @@ describe('AuthService', () => {
       verifyAsync: jest.fn(),
     };
 
+    const mockCategoriesService = {
+      createDefaultCategories: jest.fn().mockResolvedValue(undefined),
+    };
+
     const mockConfigService = {
       get: jest.fn(),
     };
@@ -65,6 +73,7 @@ describe('AuthService', () => {
         { provide: UsersService, useValue: mockUsersService },
         { provide: JwtService, useValue: mockJwtService },
         { provide: ConfigService, useValue: mockConfigService },
+        { provide: CategoriesService, useValue: mockCategoriesService },
       ],
     }).compile();
 
@@ -72,6 +81,7 @@ describe('AuthService', () => {
     usersService = module.get(UsersService);
     jwtService = module.get(JwtService);
     _configService = module.get(ConfigService);
+    categoriesService = module.get(CategoriesService);
 
     jest.spyOn(service, 'validateUser');
     jest.spyOn(service, 'login');
@@ -141,6 +151,8 @@ describe('AuthService', () => {
         isActive: mockUser.isActive,
         createdAt: mockUser.createdAt,
         updatedAt: mockUser.updatedAt,
+        accounts: [],
+        categories: [],
       };
 
       // Mock validateUser method
@@ -217,6 +229,9 @@ describe('AuthService', () => {
 
       // Assert
       expect(usersService.create).toHaveBeenCalledWith(registerDto);
+      expect(categoriesService.createDefaultCategories).toHaveBeenCalledWith(
+        createdUser.id,
+      );
       expect(jwtService.signAsync).toHaveBeenCalledTimes(2);
       expect(result).toEqual({
         accessToken: 'new-access-token',

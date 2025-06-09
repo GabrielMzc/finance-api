@@ -11,6 +11,7 @@ import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { ConfigService } from '@nestjs/config';
 import { User } from '../users/entities/user.entity';
+import { CategoriesService } from '../categories/categories.service';
 
 /**
  * Tipo que representa um usuário autenticado, omitindo campos sensíveis
@@ -29,6 +30,7 @@ export class AuthService {
     private usersService: UsersService,
     private jwtService: JwtService,
     private configService: ConfigService,
+    private categoriesService: CategoriesService,
   ) {}
 
   /**
@@ -115,6 +117,8 @@ export class AuthService {
   async register(registerDto: RegisterDto) {
     try {
       const user = await this.usersService.create(registerDto);
+
+      await this.categoriesService.createDefaultCategories(user.id);
 
       const payload = { email: user.email, sub: user.id };
 

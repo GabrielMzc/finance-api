@@ -66,6 +66,6 @@ export class AuthController {
   @ApiOperation({ summary: 'Obter perfil do usuário logado' })
   @ApiResponse({ status: 200, description: 'Perfil recuperado com sucesso' })
   getProfile(@Request() req) {
-    return req.user;
+    return this.authService.getProfile(Number(req.user.id));
   }
 }

@@ -3,6 +3,7 @@ import {
   UnauthorizedException,
   BadRequestException,
   InternalServerErrorException,
+  NotFoundException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
@@ -168,5 +169,18 @@ export class AuthService {
     await this.usersService.updateRefreshToken(userId, refreshToken);
 
     return refreshToken;
+  }
+
+  async getProfile(userId: number) {
+    const user = await this.usersService.findById(userId);
+
+    if (!user) {
+      throw new NotFoundException('Usuário não encontrado');
+    }
+
+    // Remover dados sensíveis antes de retornar
+    const { password: _, refreshToken: __, ...result } = user;
+
+    return result;
   }
 }

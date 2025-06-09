@@ -36,10 +36,8 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api-docs', app, document);
 
-  // Configurações de segurança
   app.use(helmet());
 
-  // Configuração CORS
   app.enableCors({
     origin: configService.get<string>('CORS_ORIGIN', '*'),
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',

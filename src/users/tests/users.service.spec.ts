@@ -1,9 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { ConflictException, NotFoundException } from '@nestjs/common';
-import { UsersService } from './users.service';
-import { User } from './entities/user.entity';
-import { RegisterDto } from '../auth/dto/register.dto';
+import { UsersService } from '../users.service';
+import { User } from '../entities/user.entity';
+import { RegisterDto } from '../../auth/dto/register.dto';
 
 describe('UsersService', () => {
   let service: UsersService;

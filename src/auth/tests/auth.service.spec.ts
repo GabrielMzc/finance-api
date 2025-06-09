@@ -7,11 +7,11 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { AuthService } from './auth.service';
-import { UsersService } from '../users/users.service';
-import { CategoriesService } from '../categories/categories.service';
-import { LoginDto } from './dto/login.dto';
-import { RegisterDto } from './dto/register.dto';
+import { AuthService } from '../auth.service';
+import { UsersService } from '../../users/users.service';
+import { CategoriesService } from '../../categories/categories.service';
+import { LoginDto } from '../dto/login.dto';
+import { RegisterDto } from '../dto/register.dto';
 
 describe('AuthService', () => {
   // Definindo os tipos corretos para os mocks

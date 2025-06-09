@@ -1,11 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
-import { CategoriesService } from './categories.service';
-import { Category, CategoryType } from './entities/category.entity';
-import { TransactionsService } from '../transactions/transactions.service';
-import { CreateCategoryDto } from './dto/create-category.dto';
-import { UpdateCategoryDto } from './dto/update-category.dto';
+import { CategoriesService } from '../categories.service';
+import { Category, CategoryType } from '../entities/category.entity';
+import { TransactionsService } from '../../transactions/transactions.service';
+import { CreateCategoryDto } from '../dto/create-category.dto';
+import { UpdateCategoryDto } from '../dto/update-category.dto';
 
 describe('CategoriesService', () => {
   let service: CategoriesService;

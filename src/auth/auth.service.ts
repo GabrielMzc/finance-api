@@ -10,13 +10,19 @@ import { UsersService } from '../users/users.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { ConfigService } from '@nestjs/config';
-import { User } from 'src/users/entities/user.entity';
+import { User } from '../users/entities/user.entity';
 
+/**
+ * Tipo que representa um usuário autenticado, omitindo campos sensíveis
+ */
 type AuthenticatedUser = Omit<
   User,
   'password' | 'refreshToken' | 'validatePassword' | 'hashPassword'
 >;
 
+/**
+ * Serviço responsável por gerenciar autenticação e autorização de usuários
+ */
 @Injectable()
 export class AuthService {
   constructor(
@@ -25,6 +31,14 @@ export class AuthService {
     private configService: ConfigService,
   ) {}
 
+  /**
+   * Valida as credenciais de um usuário
+   *
+   * @param email - Email do usuário
+   * @param password - Senha do usuário
+   * @returns Dados do usuário sem informações sensíveis, ou null se as credenciais forem inválidas
+   * @throws InternalServerErrorException - Erro ao tentar validar o usuário
+   */
   async validateUser(
     email: string,
     password: string,
@@ -49,6 +63,14 @@ export class AuthService {
     }
   }
 
+  /**
+   * Realiza o login de um usuário e gera tokens de acesso
+   *
+   * @param loginDto - Dados de login (email e senha)
+   * @returns Tokens de acesso e dados básicos do usuário
+   * @throws UnauthorizedException - Credenciais inválidas
+   * @throws InternalServerErrorException - Erro no processo de login
+   */
   async login(loginDto: LoginDto) {
     try {
       const { email, password } = loginDto;
@@ -82,6 +104,14 @@ export class AuthService {
     }
   }
 
+  /**
+   * Registra um novo usuário no sistema
+   *
+   * @param registerDto - Dados para registro do usuário
+   * @returns Tokens de acesso e dados básicos do usuário criado
+   * @throws BadRequestException - Email já registrado
+   * @throws InternalServerErrorException - Erro no processo de registro
+   */
   async register(registerDto: RegisterDto) {
     try {
       const user = await this.usersService.create(registerDto);
@@ -111,9 +141,15 @@ export class AuthService {
     }
   }
 
+  /**
+   * Atualiza tokens de acesso usando um refresh token válido
+   *
+   * @param refreshToken - Token de refresh atual
+   * @returns Novos tokens de acesso e refresh
+   * @throws UnauthorizedException - Token inválido ou expirado
+   */
   async refreshToken(refreshToken: string) {
     try {
-      // Verificar se o refresh token é válido
       const payload = await this.jwtService.verifyAsync(refreshToken, {
         secret:
           this.configService.get<string>('JWT_REFRESH_SECRET') ||
@@ -145,6 +181,13 @@ export class AuthService {
     }
   }
 
+  /**
+   * Realiza o logout de um usuário, invalidando seu refresh token
+   *
+   * @param userId - ID do usuário que deseja fazer logout
+   * @returns Mensagem de confirmação
+   * @throws InternalServerErrorException - Erro ao realizar logout
+   */
   async logout(userId: number) {
     try {
       await this.usersService.updateRefreshToken(userId, null);
@@ -154,6 +197,13 @@ export class AuthService {
     }
   }
 
+  /**
+   * Gera um novo refresh token para um usuário
+   *
+   * @param userId - ID do usuário
+   * @returns Refresh token gerado
+   * @private
+   */
   private async generateRefreshToken(userId: number): Promise<string> {
     const payload = { sub: userId };
     const refreshToken = await this.jwtService.signAsync(payload, {
@@ -171,6 +221,13 @@ export class AuthService {
     return refreshToken;
   }
 
+  /**
+   * Obtém o perfil completo de um usuário autenticado
+   *
+   * @param userId - ID do usuário
+   * @returns Dados do perfil do usuário sem informações sensíveis
+   * @throws NotFoundException - Usuário não encontrado
+   */
   async getProfile(userId: number) {
     const user = await this.usersService.findById(userId);
 
@@ -178,7 +235,6 @@ export class AuthService {
       throw new NotFoundException('Usuário não encontrado');
     }
 
-    // Remover dados sensíveis antes de retornar
     const { password: _, refreshToken: __, ...result } = user;
 
     return result;

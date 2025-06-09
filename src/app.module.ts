@@ -1,4 +1,9 @@
-import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
+import {
+  Module,
+  NestModule,
+  MiddlewareConsumer,
+  forwardRef,
+} from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from './auth/auth.module';
@@ -6,9 +11,7 @@ import { UsersModule } from './users/users.module';
 import { AccountsModule } from './accounts/accounts.module';
 import { CategoriesModule } from './categories/categories.module';
 import { TransactionsModule } from './transactions/transactions.module';
-import { ReportsModule } from './reports/reports.module';
-import { AiModule } from './ai/ai.module';
-import { ExportsModule } from './exports/exports.module';
+import { SmartAnalyticsModule } from './smart-analytics/smart-analytics.module';
 import { validate } from './config/env.validation';
 import { JwtModule } from '@nestjs/jwt';
 import { RateLimitMiddleware } from './common/middleware/rate-limit.middleware';
@@ -34,14 +37,12 @@ import { RateLimitMiddleware } from './common/middleware/rate-limit.middleware';
         logging: configService.get<boolean>('DB_LOGGING', false),
       }),
     }),
-    AuthModule,
-    UsersModule,
-    AccountsModule,
-    CategoriesModule,
-    TransactionsModule,
-    ReportsModule,
-    AiModule,
-    ExportsModule,
+    forwardRef(() => AuthModule),
+    forwardRef(() => UsersModule),
+    forwardRef(() => AccountsModule),
+    forwardRef(() => CategoriesModule),
+    forwardRef(() => TransactionsModule),
+    forwardRef(() => SmartAnalyticsModule),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

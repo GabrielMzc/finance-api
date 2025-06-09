@@ -48,12 +48,11 @@ describe('CategoriesService', () => {
   const mockUser = { id: 1 };
 
   beforeEach(async () => {
-    // Mock do QueryBuilder para testes de hasTransactionsForCategory
     const mockQueryBuilder = {
       leftJoin: jest.fn().mockReturnThis(),
       where: jest.fn().mockReturnThis(),
       andWhere: jest.fn().mockReturnThis(),
-      getCount: jest.fn().mockResolvedValue(0), // Default: sem transações
+      getCount: jest.fn().mockResolvedValue(0),
     };
 
     // Setup dos mocks

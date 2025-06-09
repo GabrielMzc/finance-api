@@ -3,6 +3,8 @@ import {
   NotFoundException,
   BadRequestException,
   InternalServerErrorException,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between, FindOptionsWhere } from 'typeorm';
@@ -20,7 +22,9 @@ export class TransactionsService {
   constructor(
     @InjectRepository(Transaction)
     private transactionsRepository: Repository<Transaction>,
-    private readonly accountsService: AccountsService,
+
+    @Inject(forwardRef(() => AccountsService))
+    private accountsService: AccountsService,
   ) {}
 
   /**
@@ -310,6 +314,41 @@ export class TransactionsService {
   }
 
   /**
+   * Busca as transações mais recentes de um usuário
+   *
+   * @param userId - ID do usuário proprietário
+   * @param limit - Número máximo de transações a retornar
+   * @returns Lista de transações ordenadas por data (mais recentes primeiro)
+   */
+  async findRecent(
+    userId: number,
+    limit: number = 100,
+  ): Promise<Transaction[]> {
+    return this.transactionsRepository.find({
+      where: { userId },
+      order: { date: 'DESC', createdAt: 'DESC' },
+      take: limit,
+      relations: ['category', 'account'],
+    });
+  }
+
+  /**
+   * Busca transações categorizadas para treinamento do modelo
+   *
+   * @param limit Número máximo de transações a retornar
+   * @returns Lista de transações categorizadas
+   */
+  async findCategorized(limit: number = 5000): Promise<Transaction[]> {
+    return this.transactionsRepository
+      .createQueryBuilder('transaction')
+      .leftJoinAndSelect('transaction.category', 'category')
+      .where('transaction.categoryId IS NOT NULL')
+      .orderBy('transaction.date', 'DESC')
+      .take(limit)
+      .getMany();
+  }
+
+  /**
    * Atualiza os saldos das contas afetadas por uma transação
    *
    * @param transaction - A transação que afeta os saldos
@@ -375,5 +414,19 @@ export class TransactionsService {
     } catch {
       throw new InternalServerErrorException('Erro ao reverter saldo da conta');
     }
+  }
+
+  /**
+   * Retorna uma lista de IDs de usuários distintos que possuem transações
+   *
+   * @returns Array de IDs de usuários
+   */
+  async getDistinctUsers(): Promise<number[]> {
+    const result = await this.transactionsRepository
+      .createQueryBuilder('transaction')
+      .select('DISTINCT transaction.userId', 'userId')
+      .getRawMany();
+
+    return result.map((item) => Number(item.userId));
   }
 }

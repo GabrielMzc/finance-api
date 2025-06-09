@@ -26,13 +26,17 @@ import { UpdateTransactionDto } from './dto/update-transaction.dto';
 import { QueryTransactionsDto } from './dto/query-transactions.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { Transaction, TransactionType } from './entities/transaction.entity';
+import { AutoCategorizationService } from '../smart-analytics/services/auto-categorization.service';
 
 @ApiTags('transactions')
 @Controller('transactions')
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
 export class TransactionsController {
-  constructor(private readonly transactionsService: TransactionsService) {}
+  constructor(
+    private readonly transactionsService: TransactionsService,
+    private readonly autoCategorizationService: AutoCategorizationService,
+  ) {}
 
   @Post()
   @ApiOperation({ summary: 'Criar uma nova transação' })
@@ -43,14 +47,26 @@ export class TransactionsController {
   })
   @ApiResponse({ status: 400, description: 'Dados inválidos na requisição' })
   @ApiResponse({ status: 404, description: 'Conta não encontrada' })
-  create(
+  async create(
     @Request() req,
     @Body() createTransactionDto: CreateTransactionDto,
   ): Promise<Transaction> {
-    return this.transactionsService.create(
-      Number(req.user.id),
-      createTransactionDto,
-    );
+    const userId = Number(req.user.id);
+
+    if (!createTransactionDto.categoryId) {
+      const suggestion = await this.autoCategorizationService.suggestCategory(
+        createTransactionDto.description ?? '',
+        createTransactionDto.amount,
+        userId,
+      );
+
+      if (suggestion && suggestion.confidence > 0.5) {
+        // Só aplica sugestão automática se confiança for maior que 50%
+        createTransactionDto.categoryId = suggestion.categoryId;
+      }
+    }
+
+    return this.transactionsService.create(userId, createTransactionDto);
   }
 
   @Get()
